@@ -7,4 +7,24 @@ It has a lightweight microframework feel with support for Flask-like route decor
 * It supports the development of asynchronous APIs. It's fast. Since async is much more efficient than the traditional 
   synchronous threading model
 
+### Create the environment
+
+From root of repo, run the following command
+
+```
+$ python3.8 -m venv venv
+```
+
+
+### Create Tables from Schema definiton
+
+```
+$ python -m src.app.models     
+```
+
+### Load sample data into tables
   
+```
+$ python -m src.load_data_into_table
+```
+
