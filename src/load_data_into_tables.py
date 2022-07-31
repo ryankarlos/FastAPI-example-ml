@@ -1,10 +1,11 @@
+import asyncio
+import uuid
+
 from pycaret.datasets import get_data
 from sqlalchemy.sql import text
-from .app.models import Client, Payment
+
 from .app.database import async_engine
-import uuid
-from .app.models import Base
-import asyncio
+from .app.models import Base, Client, Payment
 
 
 def split_data_client_payments():

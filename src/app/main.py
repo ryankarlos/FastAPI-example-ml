@@ -1,10 +1,13 @@
-from fastapi import Depends, FastAPI, HTTPException
-from .database import database, get_db
-from sqlalchemy.orm import Session
-from typing import List
-from src.app import crud, models, schemas
-from .schemas import Client, Payment, ClientIn, PaymentIn, PredIn, PredOut
 import json
+from typing import List, Union
+
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
+
+from src.app import crud, models, schemas
+
+from .database import database, get_db
+from .schemas import PredIn, PredOut
 
 app = FastAPI()
 
@@ -24,39 +27,51 @@ async def shutdown():
     await database.disconnect()
 
 
-@app.get("/clients/{id}", response_model=List[Client])
-async def read_clients(id: ClientIn, skip: int = 0, limit: int = 100):
-    response = await crud.get_clients_query(skip=skip, limit=limit)
+@app.get("/query/clients/{id}")
+async def read_client_by_id(id: int):
+    query_cols = {"id": id}
+    response = await crud.get_clients_query(query_cols)
     return response
 
 
-@app.get("/payments/{id}", response_model=List[Payment])
-async def read_payments(id: PaymentIn, skip: int = 0, limit: int = 100):
-    query = crud.get_clients(skip=skip, limit=limit)
-    return await database.fetch_all(query)
+@app.get("/query/clients/age/")
+async def read_client_avg_age(
+    gender: Union[str, None], education: Union[str, None], marriage: Union[str, None]
+):
+    query_cols = {"gender": gender, "education": education, "marriage": marriage}
+    response = await crud.get_clients_query(query_cols)
+    return response
 
 
-@app.get("/train/data", response_model=List[schemas.PredOut], status_code=200)
-async def get_training_data(db: Session = Depends(get_db)):
-    data = crud.get_training_data(db)
-    data = json.dumps(data)
-    response_object = {"Response": data}
+@app.get("/query/payments/{id}")
+async def read_payments_by_client_id(id: int):
+    response = await crud.get_payments_by_client_id(id=id)
+    return response
+
+
+@app.get("/train/data/")
+async def get_training_data():
+    df = crud.get_training_data()
+    data_dict = df.to_dict('records')
+    response_object = {"Response": data_dict}
     return response_object
 
 
-@app.get("/train/model", response_model=List[schemas.PredOut], status_code=200)
-async def train_model(db: Session = Depends(get_db)):
-    data = crud.get_training_data(db)
-    response = crud.training_workflow(data)
-    response_object = {"Response": response}
+@app.get("/train/model/")
+async def train_model(folds: int = 5, version: float = 0.1):
+    data = crud.get_training_data()
+    name, performance = await crud.training_workflow(data, cv_folds=folds, version=version)
+    response_object = {"Response": {"Best-Model":name,
+                                    "Scores": json.dumps(performance)
+                                    }
+                       }
     return response_object
 
 
-@app.get("/predict/realtime", response_model=List[PredOut], status_code=200)
-async def get_prediction(payload: PredIn, db: Session = Depends(get_db)):
-    response = crud.predict(payload)
-
+@app.post("/predict/realtime/", status_code=200)
+async def get_prediction(payload: PredIn, version: float = 0.1, run_id: Union[str, None] = None):
+    payload_dict = payload.dict()
+    response = await crud.predict(payload_dict, version, run_id)
     if not response:
         raise HTTPException(status_code=400, detail="Model not found.")
-    response_object = crud.response_mapping(response)
-    return response_object
+    return response

@@ -1,16 +1,18 @@
+from datetime import datetime
+
 from sqlalchemy import (
-    Column,
-    ForeignKey,
     BigInteger,
-    Integer,
-    String,
-    LargeBinary,
-    Float,
+    Column,
     DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    LargeBinary,
+    String,
 )
 from sqlalchemy.orm import relationship
-from .database import engine, Base
-from datetime import datetime
+
+from .database import Base, engine
 
 
 class Client(Base):

@@ -1,15 +1,27 @@
-from pycaret.classification import *
-from src.app.models import Client, Payment, ModelResult
-from .database import SessionLocal, engine
-import uuid
-import datetime
-import os
 import asyncio
-import pickle
+import datetime
 import json
-from sqlalchemy import func
-import sys
 import logging
+import os
+import pickle
+import sys
+import uuid
+
+import pandas as pd
+from pycaret.classification import (
+    compare_models,
+    finalize_model,
+    predict_model,
+    pull,
+    save_model,
+    setup,
+    models,
+)
+from sqlalchemy import func
+
+from src.app.models import Client, ModelResult, Payment
+
+from .database import SessionLocal, engine
 
 logger = logging.getLogger("api_methods")
 logger.setLevel(logging.DEBUG)
@@ -52,7 +64,7 @@ async def get_clients_query(query_cols):
     with SessionLocal.begin() as session:
         if query_cols.get("id"):
             logger.info(
-                f'Returning row for table Client, with col id={query_cols.get("id")}'
+                f'Sending query to table Client, with col id={query_cols.get("id")}'
             )
             row = session.query(Client).filter(Client.id == query_cols.get("id")).one()
             response = {
@@ -80,7 +92,7 @@ async def get_clients_query(query_cols):
 
 async def get_payments_by_client_id(id):
     with SessionLocal.begin() as session:
-        logger.info(f"Returning row for table Payment, with col client id={id}")
+        logger.info(f"Sending query to table Payment, with col client id={id}")
         results = session.query(Payment).filter(Payment.client_id == id)
         response = [
             {
@@ -99,7 +111,9 @@ async def get_model_artifact_from_db(version, run_id):
         if run_id is not None:
             row = session.query(ModelResult).filter(ModelResult.run_id == run_id).one()
         else:
-            logger.info(f"getting latest artifact for version {version}")
+            logger.info(
+                f"Fetching latest model artifact from db for model version {version}"
+            )
             row = (
                 session.query(ModelResult)
                 .order_by(ModelResult.created_date.desc())
@@ -163,18 +177,23 @@ async def initialise_training_setup(data, target):
     )
 
 
-async def training_workflow(data, version=0.1):
+async def training_workflow(data, cv_folds=5, version=0.1):
     data_copy = data.copy()
     run_id = await create_runid()
     await initialise_training_setup(data=data_copy, target="default")
     logger.info("initialised training setup")
-    best = compare_models(fold=5, verbose=False)
+    all_models = models()
+    models_list = ",".join(all_models.reset_index()["ID"].tolist())
+    logger.info(
+        f"Running cv with {cv_folds} folds for models: {models_list}.Wait for completion ....."
+    )
+    best = compare_models(fold=cv_folds, verbose=False)
     model_name, performance = await get_model_performance_scores(best)
     logger.info(f"Performance for model {model_name}: {json.dumps(performance)}")
-    final_best = await finalize_and_serialise_model(
+    await finalize_and_serialise_model(
         best, run_id, model_name, performance, version
     )
-    return final_best
+    return model_name, performance
 
 
 async def get_best_model_params(model):
@@ -184,7 +203,7 @@ async def get_best_model_params(model):
 
 async def get_model_performance_scores(model):
     best_results = pull()  # fetch the model comparison results df
-    logger.debug(best_results)
+    logger.debug(f"CV Results Grid for all models: \n\n {best_results}")
     top_model = best_results.iloc[0, :]
     model_name = top_model["Model"]
     performance = {"AUC": top_model["AUC"], "Accuracy": top_model["Accuracy"]}
@@ -196,7 +215,7 @@ async def finalize_and_serialise_model(
 ):
     final_best = finalize_model(model, model_only=False)
     params = await get_best_model_params(final_best)
-    logger.info(f"Tuned parameters for model {model_name}: \n {params}")
+    logger.info(f"Tuned parameters for model {model_name}: \n\n {params}")
     await serialise_model(final_best, version, run_id, model_name, performance, params)
     logger.info(f"serialised model {model_name} to db with run id {run_id}")
     return final_best
