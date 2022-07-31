@@ -10,10 +10,12 @@ import asyncio
 def split_data_client_payments():
     df = get_data("credit").reset_index().rename(columns={"index": "ID"})
     clients_df = df.loc[:, ["ID", "SEX", "EDUCATION", "MARRIAGE", "AGE"]]
-    payments_df = df.drop(["SEX", "EDUCATION", "MARRIAGE", "AGE"], axis=1)
+    payments_df = df.loc[
+        :, ["ID", "LIMIT_BAL", "PAY_1", "BILL_AMT1", "PAY_AMT1", "default"]
+    ]
     transaction_id = payments_df.apply(lambda _: str(uuid.uuid1()), axis=1)
 
-    payments_df.insert(0, "id", transaction_id)
+    payments_df.insert(0, "trans_id", transaction_id)
     clients_df.columns = [c.name for c in Client.__table__.columns]
     payments_df.columns = [c.name for c in Payment.__table__.columns]
     return payments_df, clients_df

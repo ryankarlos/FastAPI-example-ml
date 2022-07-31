@@ -9,7 +9,7 @@ password = os.environ["DATABASE_PASSWORD"]
 db = "creditdata"
 SQLALCHEMY_DATABASE_URL = f"postgresql://{user}:{password}@localhost/{db}"
 database = Database(SQLALCHEMY_DATABASE_URL)
-engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=False)
 async_engine = create_async_engine(
     f"postgresql+asyncpg://{user}:{password}@localhost/{db}",
     echo=True,

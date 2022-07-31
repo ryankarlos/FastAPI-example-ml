@@ -9,22 +9,36 @@ It has a lightweight microframework feel with support for Flask-like route decor
 
 ### Create the environment
 
-From root of repo, run the following command
+From root of repo, run the following command to create a virtual env, activate it and install the main and dev dependencies.
+We also export env vars for connecting to db later.
 
 ```
 $ python3.8 -m venv venv
+$ source activate venv/bin/activate
 ```
 
 
-### Create Tables from Schema definiton
-
 ```
-$ python -m src.app.models     
-```
-
-### Load sample data into tables
-  
-```
-$ python -m src.load_data_into_table
+(venv) $ pip install -r src/requirements.txt
+(venv) $ pip install -r src/requirements-dev.txt
 ```
 
+
+```
+(venv) $ export DATABASE_USER=<username>
+(venv) $ export DATABASE_PASSWORD=<password>
+```
+
+
+### Update Tables in DB
+
+
+```
+(venv) $ python -m src.load_data_into_table
+```
+
+### 
+
+```
+(venv) $ python -m src.app.crud
+```

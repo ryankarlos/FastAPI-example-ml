@@ -10,7 +10,7 @@ app = FastAPI()
 
 
 @app.get("/")
-async def indext():
+async def index():
     return {"message": "Welcome from the API"}
 
 
@@ -26,8 +26,8 @@ async def shutdown():
 
 @app.get("/clients/{id}", response_model=List[Client])
 async def read_clients(id: ClientIn, skip: int = 0, limit: int = 100):
-    query = crud.get_clients(skip=skip, limit=limit)
-    return await database.fetch_all(query)
+    response = await crud.get_clients_query(skip=skip, limit=limit)
+    return response
 
 
 @app.get("/payments/{id}", response_model=List[Payment])
@@ -47,7 +47,7 @@ async def get_training_data(db: Session = Depends(get_db)):
 @app.get("/train/model", response_model=List[schemas.PredOut], status_code=200)
 async def train_model(db: Session = Depends(get_db)):
     data = crud.get_training_data(db)
-    response = crud.train(data)
+    response = crud.training_workflow(data)
     response_object = {"Response": response}
     return response_object
 
