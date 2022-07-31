@@ -1,20 +1,33 @@
 import json
 from typing import List, Union
-
+import redis
 from fastapi import Depends, FastAPI, HTTPException
+import time
 from sqlalchemy.orm import Session
-
 from src.app import crud, models, schemas
-
 from .database import database, get_db
 from .schemas import PredIn, PredOut
 
 app = FastAPI()
+cache = redis.Redis(host='redis', port=6379)
+
+
+def get_hit_count():
+    retries = 5
+    while True:
+        try:
+            return cache.incr('hits')
+        except redis.exceptions.ConnectionError as exc:
+            if retries == 0:
+                raise exc
+            retries -= 1
+            time.sleep(0.5)
 
 
 @app.get("/")
 async def index():
-    return {"message": "Welcome from the API"}
+    count = get_hit_count()
+    return {"message": f"Welcome to the home page of the API. I have been visited {count} times"}
 
 
 @app.on_event("startup")
