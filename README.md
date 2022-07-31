@@ -37,8 +37,43 @@ $ source activate venv/bin/activate
 (venv) $ python -m src.load_data_into_table
 ```
 
-### 
+![](screenshots/load-data-into-table-logs.png)
+
+### Run all methods asynchronously
 
 ```
 (venv) $ python -m src.app.crud
 ```
+
+![](screenshots/run_crud_module_logs.png)
+
+
+### Deploying FASTAPI in Container
+
+
+
+### Interactive API documentation
+
+![](screenshots/fastapi-docs-page.png)
+
+* DB Query 
+
+![](screenshots/api-query-client-id.png)
+
+
+![](screenshots/api-query-client-age.png)
+
+
+![](screenshots/api-train-model.png)
+
+
+* Start Training Workflow
+
+![](screenshots/api-train-model.png)
+
+* Realtime Prediction
+
+![](screenshots/predict-realtime-request.png)
+
+
+![](screenshots/predict-realtime-response.png)
