@@ -190,9 +190,7 @@ async def training_workflow(data, cv_folds=5, version=0.1):
     best = compare_models(fold=cv_folds, verbose=False)
     model_name, performance = await get_model_performance_scores(best)
     logger.info(f"Performance for model {model_name}: {json.dumps(performance)}")
-    await finalize_and_serialise_model(
-        best, run_id, model_name, performance, version
-    )
+    await finalize_and_serialise_model(best, run_id, model_name, performance, version)
     return model_name, performance
 
 

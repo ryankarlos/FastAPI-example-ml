@@ -9,14 +9,14 @@ from .database import database, get_db
 from .schemas import PredIn, PredOut
 
 app = FastAPI()
-cache = redis.Redis(host='redis', port=6379)
+cache = redis.Redis(host="redis", port=6379)
 
 
 def get_hit_count():
     retries = 5
     while True:
         try:
-            return cache.incr('hits')
+            return cache.incr("hits")
         except redis.exceptions.ConnectionError as exc:
             if retries == 0:
                 raise exc
@@ -27,7 +27,9 @@ def get_hit_count():
 @app.get("/")
 async def index():
     count = get_hit_count()
-    return {"message": f"Welcome to the home page of the API. I have been visited {count} times"}
+    return {
+        "message": f"Welcome to the home page of the API. I have been visited {count} times"
+    }
 
 
 @app.get("/query/clients/{id}")
@@ -55,7 +57,7 @@ async def read_payments_by_client_id(id: int):
 @app.get("/train/data/")
 async def get_training_data():
     df = crud.get_training_data()
-    data_dict = df.to_dict('records')
+    data_dict = df.to_dict("records")
     response_object = {"Response": data_dict}
     return response_object
 
@@ -63,16 +65,19 @@ async def get_training_data():
 @app.get("/train/model/")
 async def train_model(folds: int = 5, version: float = 0.1):
     data = crud.get_training_data()
-    name, performance = await crud.training_workflow(data, cv_folds=folds, version=version)
-    response_object = {"Response": {"Best-Model":name,
-                                    "Scores": json.dumps(performance)
-                                    }
-                       }
+    name, performance = await crud.training_workflow(
+        data, cv_folds=folds, version=version
+    )
+    response_object = {
+        "Response": {"Best-Model": name, "Scores": json.dumps(performance)}
+    }
     return response_object
 
 
 @app.post("/predict/realtime/", status_code=200)
-async def get_prediction(payload: PredIn, version: float = 0.1, run_id: Union[str, None] = None):
+async def get_prediction(
+    payload: PredIn, version: float = 0.1, run_id: Union[str, None] = None
+):
     payload_dict = payload.dict()
     response = await crud.predict(payload_dict, version, run_id)
     if not response:

@@ -14,4 +14,3 @@ class PredIn(BaseModel):
 
 class PredOut(BaseModel):
     prediction: dict
-
