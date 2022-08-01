@@ -1,20 +1,13 @@
 # Examples of deploying and hosting a Machine Learning Model with FastAPI
 
-FastAPI is a modern, high-performance, batteries-included Python web framework that's perfect for building RESTful APIs. It can handle both synchronous and asynchronous requests and has built-in support for data validation, JSON serialization, authentication and authorization, and OpenAPI.
-It has a lightweight microframework feel with support for Flask-like route decorators.
-
-* It takes advantage of Python type hints for parameter declaration which enables data validation (via pydantic) and OpenAPI/Swagger documentation.
-* It supports the development of asynchronous APIs. It's fast. Since async is much more efficient than the traditional 
-  synchronous threading model
-  
-Internally, FastAPI uses libraries such as Starlette and Pydantic. However, we don’t have to install them separately.
-We also need an ASGI server to serve our application such as Uvicorn.
-We will be using the PyCaret library for processing the data and creating a workflow for training a number of 
-machine learning models for a classification task.
+This repository contains code for asynchronous example api using the [Fast Api framework](https://fastapi.tiangolo.com/), 
+[Uvicorn server](https://www.uvicorn.org/), [SQlAlchemy](https://www.sqlalchemy.org/), Postgres Database for crud operations in db tables.
+It also uses the [PyCaret library](https://pycaret.org/) to train machine learning models and generated predictions for data 
+received from requests to API.
 
 ## Creating dev environment
 
-We have defined the services that make up your app in docker-compose.yml so they can be run together in an 
+We have defined the services that make up your app in `docker-compose.yml` so they can be run together in an 
 isolated environment. We have defined four services:
 
   * **dev**: The dev service uses an image that’s built from the Dockerfile in the src directory. It copies the applciation code into container and 
