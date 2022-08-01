@@ -3,9 +3,7 @@ from typing import List, Union
 import redis
 from fastapi import Depends, FastAPI, HTTPException
 import time
-from sqlalchemy.orm import Session
-from src.app import crud, models, schemas
-from .database import database, get_db
+from src.app import crud
 from .schemas import PredIn, PredOut
 
 app = FastAPI()

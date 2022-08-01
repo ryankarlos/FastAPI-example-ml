@@ -8,7 +8,7 @@ services:
     volumes:
       - ./src/app/:/usr/src/app/
     ports:
-      - 80:80
+      - 8000:80
     environment:
       - SQLALCHEMY_DATABASE_URL=postgresql://hello_fastapi:hello_fastapi@db/hello_fastapi_dev
     depends_on:
@@ -24,7 +24,6 @@ services:
       - SQLALCHEMY_DATABASE_URL=postgresql://hello_fastapi:hello_fastapi@db/hello_fastapi_dev
     depends_on:
       - db
-      - redis
   db:
     image: postgres:14.1
     expose:
@@ -41,6 +40,10 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
   redis:
     image: "redis:alpine"
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
 
 volumes:
   postgres_data:

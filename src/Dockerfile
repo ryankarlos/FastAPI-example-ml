@@ -17,7 +17,7 @@ ENTRYPOINT ["/bin/bash"]
 
 
 FROM python:3.8-slim-bullseye AS web
-WORKDIR /usr/src
+WORKDIR /usr
 COPY requirements.txt /usr/src/requirements.txt
 RUN apt-get update
 RUN apt-get install -y build-essential python-dev git
@@ -26,4 +26,4 @@ RUN pip install --upgrade pip setuptools wheel \
     && rm -rf /root/.cache/pip
 COPY ./app /usr/src/app
 EXPOSE 80
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]

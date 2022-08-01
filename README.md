@@ -17,39 +17,68 @@ machine learning models for a classification task.
 We have defined the services that make up your app in docker-compose.yml so they can be run together in an 
 isolated environment. We have defined four services:
 
-  * "dev": The dev service uses an image that’s built from the Dockerfile in the src directory. It copies the applciation code into container and 
+  * **dev**: The dev service uses an image that’s built from the Dockerfile in the src directory. It copies the applciation code into container and 
     installs the dependencies from requirements file. We will use this mainly for development purposes - ie testing the scripts and 
     populating the db with data etc
-  * "web": The web service deploys the app. Since we want to start the server when the container is run, 
+  * **web**: The web service deploys the app. Since we want to start the server when the container is run, 
     we specify the command for the uvicorn server program to run the Fast API application in the CMD option.
     We have mapped the host port to the exposed port, 80 on the container. The container is listening on the default port 80.
-  * "db": This db service uses a public Postgres image, pulled from the Docker Hub registry. We have also configured default
+  * **db**: This db service uses a public Postgres image, pulled from the Docker Hub registry. We have also configured default
     env vars to create a postgres server and db instance with the username and password. We have mapped the ports 5432:5432, to be able to 
     connect to postgres in the container with any tool from a host machine (e.g. pg admin).
-  * "redis": The redis service uses a public Redis image pulled from the Docker Hub registry.
+  * **redis**: The redis service uses a public Redis image pulled from the Docker Hub registry.
 
-
-From the project directory, start up the dev application by running the following command:
+From the project directory, run the following command to build the images for all the services listed in compose.yaml. 
 
 ```
-$ docker compose run dev 
+$ docker compose build
 ```
+![](screenshots/docker-compose-build.png)
 
-Compose builds the image for your code, and starts the services you defined. Since our application code 
-interacts with the db, we require postgres container to be built and run before the dev image can be built.
-We have defined these services in the `depends on` property. 
-Once the container is built and run, we should be inside the container shell as we specified bash command as entrypoint. 
+Since our application code in dev container interacts with the db, we require the postgres container 
+to be built and run before the dev image can be built. We have defined these services in the `depends on` property.
+for the 'dev' service in docker-compose.yaml. The build command above should automatically start the 
+`db` and `redis` services in the background.
 
-![](screenshots/api-train-model.png)
+![](screenshots/running-containers-db-redis.png)
 
-We can check the code is correctly copied over during the build phase and that we have the correct version of python.
+We can now start the dev service container by running the command `docker compose run dev`
+If the command ran successfully,  we should be inside the container shell as we specified bash command as entrypoint
+in dockerfile. We can then check the code is correctly copied over during the build phase and that we
+have the correct version of python etc
 
-![](screenshots/api-train-model.png)
+![](screenshots/docker-compose-run-dev.png)
 
-For the containers running the web and dev services, we have also configured the volume property invdocker-compose.yml,
+To run the webapp service, we can run `docker compose run webapp`. We could also start all containers at the same 
+time using `docker compose up`. To run containers silently in the background use `docer compose up -d` 
+
+![](screenshots/docker-start-all-containers.png)
+
+For the containers running the web and dev services, we have also configured the volume property in `docker-compose.yml`,
 so the application code is mounted into the container using a volume. This allows us to make changes to the code from 
 outside the container (e.g. via Pycharm on host machine) and see the changes instantly updated in the container, 
 without having to rebuild the image.
+
+### Terminating active processes
+
+Sometimes we may get an error in running the servers on container if the port it is required to run on is currently in use.
+We will need to the run the following commands to list the active processes (PID) for the given port and then pass the PID to the `kill`
+command
+
+```
+$ sudo lsof -i tcp:<port>
+$ sudo kill -9 <PID>
+```
+if you have installed PostgreSQL from the EnterpriseDB and running the server on
+local machine, then the above commands will fail to disable postgres process, as it will spawn new processes again 
+and again with a different PID. This is because of a `plist` configuration file in the LaunchDaemons folder, which schedules 
+postgresql server to be always on when the computer is on. Hence we need to remove this `plist` file using the 
+command below (note the path to this file may vary depending on the postgresql version installed)
+
+```
+sudo launchctl unload /Library/LaunchDaemons/com.edb.launchd.postgresql-13.plist  
+rm -rf /Library/LaunchDaemons/com.edb.launchd.postgresql-13.plist
+```
 
 ## Update Tables in DB
 
@@ -71,7 +100,6 @@ This dataset contains information on default payments, demographic factors, cred
 * **default**: Default payment (1=yes, 0=no) Target Column
 
 In the dev container, run the following commands:
-
 
 ```
 root@722927b42f2e:/usr/src# cd ..
@@ -107,10 +135,12 @@ We can log the result of each task which should be in the same order of task com
 This may not benefit so much from concurrent execution and maybe more beneficial to use parallelism and 
 multiprocessing.
 
-We can run the module using the command below:
+We can run the module using the command below. We need to `cd` one dir up so crud.py can find the `src` 
+package when referencing imports.
 
 ```
-root@722927b42f2e:/usr# python -m src.app.crud
+root@7c18292737ab:/usr/src# cd ..
+root@7c18292737ab:/usr# python -m app.crud
 ```
 
 We can see the logs in the screenshot below. The logs towards the end correspond to the results of the 
@@ -124,17 +154,29 @@ complete faster than the model training and prediction workflows.
 
 The `main.py` module defines the path operation functions and decorators and the app object which is an instance of the class FastAPI. 
 This will be the main point of interaction to create your API. This app object is the same one referred to 
-in the command to run the live server with uvicorn in the Dockerfile CMD.
-The great part of FastAPI is that it takes care of API documentation out-of-the-box. In other words,
-we can simply go to http://localhost:80/docs to view the API documentation.the automatic documentation uses SwaggerUI. 
+in the command to run the live server with uvicorn in the Dockerfile `CMD`.
+The great part of FastAPI is that it takes care of API documentation out-of-the-box. 
+To view the API documentation we can go http://127.0.0.1:8000/docs as we have added port forwarding to 
+forward traffic from port 8000 to port 80 where server is listening on.The automatic documentation uses SwaggerUI.
 See below:
-
 
 ![](screenshots/fastapi-docs-page.png)
 
-We will discuss the various API created in the sections below.
+We will discuss the various API created in the sections below:
 
-### DB Query 
+### Root path operation
+
+If the dev environment section was configured properly, we should have a running container serving a redis db.
+
+A request sent to the root path ('/') will be cached as a 'hit' in the redis db and a response sent back to
+the user showing the number of times the pages has been visited. If further requests are sent, this number will
+increment and we should see that in the response.
+
+The screenshot below shows the response after two requests were sent to the root path.
+
+![](screenshots/root-resource-get-hits.png)
+
+### DB Queries
 
 We have created three routes for handling specific db queries from clients and payments tables.
 
@@ -153,7 +195,6 @@ or none of the attributes to filter the table by. If none are specified, then th
 the clients in the table.
 
 ![](screenshots/api-query-client-age.png)
-
 
 ### Start Training Workflow
 
@@ -182,14 +223,9 @@ Finally, if validation check has passed, the received data will be available as 
 will need this as a dictionary before passing in as a parameter to our methods in backend, so we will convert the model
 using `model.dict`  [7] 
 
-
 Navigate to the corresponding resource section in the API docs. 
 
 ![](screenshots/predict-realtime-request.png)
-
-
-![](screenshots/predict-realtime-response.png)
-
 
 For cases, where  body, path and query parameters are passed in as function parameters, FastAPI is able to 
 recognise each of them and take data from the correct place. As described in [6], it uses this strategy: 
@@ -198,15 +234,37 @@ recognise each of them and take data from the correct place. As described in [6]
 * If the parameter is of a singular type (like int, float, str, bool, etc) it will be interpreted as a query parameter.
 * If the parameter is declared to be of the type of a Pydantic model, it will be interpreted as a request body.
 
+### Clean up
+
+To teardown all the containers, run the following command 
+
+```
+docker compose down
+```
+
+![](screenshots/docker-stop-all-containers.png)
+
+To delete all the images, we can either delete them individually using the image id which can be 
+retrieved from the `docker images` command and passing it to the command below
+
+```
+docker image rm <IMAGE-ID> -f    
+```
+
+or deleting multiple images at once which share a common name pattern
+
+```
+docker rmi $(docker images | grep 'fastapi') 
+```
 
 ## References
 
 
-1 Pycaret Documentation https://pycaret.gitbook.io/docs/ 
-2 Async with Fast API https://fastapi.tiangolo.com/async/
-3 Coroutines and Tasks https://docs.python.org/3/library/asyncio-task.html
-4 Path Parameters https://fastapi.tiangolo.com/tutorial/path-params/
-5 Query Parameters https://fastapi.tiangolo.com/tutorial/query-params/
-6 Request Body with Pydantic Model https://fastapi.tiangolo.com/tutorial/body/
-7 https://pydantic-docs.helpmanual.io/usage/exporting_models/
-8 Good Resource on Async IO https://realpython.com/async-io-python/
+* 1 Pycaret Documentation https://pycaret.gitbook.io/docs/ 
+* 2 Async with Fast API https://fastapi.tiangolo.com/async/
+* 3 Coroutines and Tasks https://docs.python.org/3/library/asyncio-task.html
+* 4 Path Parameters https://fastapi.tiangolo.com/tutorial/path-params/
+* 5 Query Parameters https://fastapi.tiangolo.com/tutorial/query-params/
+* 6 Request Body with Pydantic Model https://fastapi.tiangolo.com/tutorial/body/
+* 7 https://pydantic-docs.helpmanual.io/usage/exporting_models/
+* 8 Good Resource on Async IO https://realpython.com/async-io-python/
