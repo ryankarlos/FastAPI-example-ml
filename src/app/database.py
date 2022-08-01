@@ -5,14 +5,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-user = os.environ["DATABASE_USER"]
-password = os.environ["DATABASE_PASSWORD"]
-db = "creditdata"
-SQLALCHEMY_DATABASE_URL = f"postgresql://{user}:{password}@localhost/{db}"
+SQLALCHEMY_DATABASE_URL = os.environ["SQLALCHEMY_DATABASE_URL"]
 database = Database(SQLALCHEMY_DATABASE_URL)
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=False)
+async_db_url = "postgresql+asyncpg://" + SQLALCHEMY_DATABASE_URL.split("//")[1]
 async_engine = create_async_engine(
-    f"postgresql+asyncpg://{user}:{password}@localhost/{db}",
+    async_db_url,
     echo=True,
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

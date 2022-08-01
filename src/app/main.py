@@ -30,16 +30,6 @@ async def index():
     return {"message": f"Welcome to the home page of the API. I have been visited {count} times"}
 
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
-
-
 @app.get("/query/clients/{id}")
 async def read_client_by_id(id: int):
     query_cols = {"id": id}
