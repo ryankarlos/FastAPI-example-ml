@@ -6,6 +6,7 @@ import os
 import pickle
 import sys
 import uuid
+from sqlalchemy.orm import Session
 
 import pandas as pd
 from pycaret.classification import (
@@ -21,7 +22,7 @@ from sqlalchemy import func
 
 from src.app.models import Client, ModelResult, Payment
 
-from .database import SessionLocal, engine
+from .database import engine
 
 logger = logging.getLogger("api_methods")
 logger.setLevel(logging.DEBUG)
@@ -39,91 +40,82 @@ if not sys.warnoptions:
     os.environ["PYTHONWARNINGS"] = "ignore"  # ignore pesky sklearn warnings
 
 
-def get_training_data():
-    with SessionLocal.begin() as session:
-        sql = session.query(Client, Payment).join(Payment).statement
+def get_training_data(db: Session):
+    sql = db.query(Client, Payment).join(Payment).statement
     df = pd.read_sql(sql, engine)
     df = df.drop(["client_id", "id", "id_1"], axis=1)
     return df
 
 
-async def query_table(schema, skip, limit):
-    with SessionLocal.begin() as session:
-        results = session.query(schema).offset(skip).limit(limit).all()
-        session.expunge_all()  # do this so results attributes accessible outside the scope of the session
+async def query_table(db: Session, schema, skip, limit):
+    results = db.query(schema).offset(skip).limit(limit).all()
+    db.expunge_all()  # do this so results attributes accessible outside the scope of the session
     return results
 
 
-async def get_clients_query(query_cols):
+async def get_clients_query(db: Session, query_cols):
     """
     eithe return single row based on client id or compute average age after
     query filter on gender, education, marriage values
     :param query_cols:
     :return:
     """
-    with SessionLocal.begin() as session:
-        if query_cols.get("id"):
-            logger.info(
-                f'Sending query to table Client, with col id={query_cols.get("id")}'
-            )
-            row = session.query(Client).filter(Client.id == query_cols.get("id")).one()
-            response = {
-                "id": row.id,
-                "gender": row.gender,
-                "education": row.education,
-                "marriage": row.marriage,
-                "age": row.age,
-            }
-        else:
-            all_filters = []
-            if query_cols.get("gender"):
-                all_filters.append(Client.gender == query_cols.get("gender"))
-            if query_cols.get("education"):
-                all_filters.append(Client.education == query_cols.get("education"))
-            if query_cols.get("marriage"):
-                all_filters.append(Client.marriage == query_cols.get("marriage"))
-            logger.info(
-                f"Finding average client age for attributes: {str(all_filters)}"
-            )
-            response = session.query(func.avg(Client.age)).filter(*all_filters).scalar()
-            response = {"average-age": round(response, 1)}
+
+    if query_cols.get("id"):
+        logger.info(
+            f'Sending query to table Client, with col id={query_cols.get("id")}'
+        )
+        row = db.query(Client).filter(Client.id == query_cols.get("id")).one()
+        response = {
+            "id": row.id,
+            "gender": row.gender,
+            "education": row.education,
+            "marriage": row.marriage,
+            "age": row.age,
+        }
+    else:
+        all_filters = []
+        if query_cols.get("gender"):
+            all_filters.append(Client.gender == query_cols.get("gender"))
+        if query_cols.get("education"):
+            all_filters.append(Client.education == query_cols.get("education"))
+        if query_cols.get("marriage"):
+            all_filters.append(Client.marriage == query_cols.get("marriage"))
+        logger.info(f"Finding average client age for attributes: {str(all_filters)}")
+        response = db.query(func.avg(Client.age)).filter(*all_filters).scalar()
+        response = {"average-age": round(response, 1)}
     return response
 
 
-async def get_payments_by_client_id(id):
-    with SessionLocal.begin() as session:
-        logger.info(f"Sending query to table Payment, with col client id={id}")
-        results = session.query(Payment).filter(Payment.client_id == id)
-        response = [
-            {
-                "bill": row.bill,
-                "pay": row.pay,
-                "repay_status": row.repay_status,
-                "limit": row.limitbal,
-            }
-            for row in results
-        ]
+async def get_payments_by_client_id(db: Session, id):
+    logger.info(f"Sending query to table Payment, with col client id={id}")
+    results = db.query(Payment).filter(Payment.client_id == id)
+    response = [
+        {
+            "bill": row.bill,
+            "pay": row.pay,
+            "repay_status": row.repay_status,
+            "limit": row.limitbal,
+        }
+        for row in results
+    ]
     return response
 
 
-async def get_model_artifact_from_db(version, run_id):
-    with SessionLocal.begin() as session:
-        if run_id is not None:
-            row = session.query(ModelResult).filter(ModelResult.run_id == run_id).one()
-        else:
-            logger.info(
-                f"Fetching latest model artifact from db for model version {version}"
-            )
-            row = (
-                session.query(ModelResult)
-                .order_by(ModelResult.created_date.desc())
-                .first()
-            )
-        response = {"Model": row.artifact}
+async def get_model_artifact_from_db(db: Session, version, run_id):
+    if run_id is not None:
+        row = db.query(ModelResult).filter(ModelResult.run_id == run_id).one()
+    else:
+        logger.info(
+            f"Fetching latest model artifact from db for model version {version}"
+        )
+        row = db.query(ModelResult).order_by(ModelResult.created_date.desc()).first()
+    response = {"Model": row.artifact}
     return response
 
 
 async def serialise_model(
+    db: Session,
     model,
     version,
     run_id,
@@ -137,22 +129,21 @@ async def serialise_model(
     save_model(model, path)
     pickle_string = pickle.dumps(model)
     params = json.dumps(params)
-    with SessionLocal.begin() as session:
-        session.add(
-            ModelResult(
-                run_id=run_id,
-                name=model_name,
-                parameters=params,
-                auc=performance["AUC"],
-                accuracy=performance["Accuracy"],
-                version=version,
-                artifact=pickle_string,
-            )
+    db.add(
+        ModelResult(
+            run_id=run_id,
+            name=model_name,
+            parameters=params,
+            auc=performance["AUC"],
+            accuracy=performance["Accuracy"],
+            version=version,
+            artifact=pickle_string,
         )
-        session.commit()
+    )
+    db.commit()
 
 
-async def deserialise_model(version, run_id):
+async def deserialise_model(db: Session, version, run_id):
     result = await get_model_artifact_from_db(version, run_id)
     pickle_string = result["Model"]
     model = pickle.loads(pickle_string)
@@ -188,7 +179,9 @@ async def training_workflow(data, cv_folds=5, version=0.1):
         f"Running cv with {cv_folds} folds for models: {models_list}.Wait for completion ....."
     )
     best = compare_models(fold=cv_folds, verbose=False)
-    model_name, performance = await get_model_performance_scores(best)
+    best_results = pull()  # fetch the model comparison results df
+    logger.debug(f"CV Results Grid for all models: \n\n {best_results}")
+    model_name, performance = await get_model_performance_scores(best_results)
     logger.info(f"Performance for model {model_name}: {json.dumps(performance)}")
     await finalize_and_serialise_model(best, run_id, model_name, performance, version)
     return model_name, performance
@@ -199,9 +192,7 @@ async def get_best_model_params(model):
     return params
 
 
-async def get_model_performance_scores(model):
-    best_results = pull()  # fetch the model comparison results df
-    logger.debug(f"CV Results Grid for all models: \n\n {best_results}")
+async def get_model_performance_scores(best_results):
     top_model = best_results.iloc[0, :]
     model_name = top_model["Model"]
     performance = {"AUC": top_model["AUC"], "Accuracy": top_model["Accuracy"]}
@@ -209,19 +200,21 @@ async def get_model_performance_scores(model):
 
 
 async def finalize_and_serialise_model(
-    model, run_id: str, model_name: str, performance: dict, version: float
+    db: Session, model, run_id: str, model_name: str, performance: dict, version: float
 ):
     final_best = finalize_model(model, model_only=False)
     params = await get_best_model_params(final_best)
     logger.info(f"Tuned parameters for model {model_name}: \n\n {params}")
-    await serialise_model(final_best, version, run_id, model_name, performance, params)
+    await serialise_model(
+        db, final_best, version, run_id, model_name, performance, params
+    )
     logger.info(f"serialised model {model_name} to db with run id {run_id}")
     return final_best
 
 
-async def predict(payload, version=0.1, run_id=None):
+async def predict(db: Session, payload, version=0.1, run_id=None):
     df = pd.DataFrame([payload])
-    model = await deserialise_model(version, run_id)
+    model = await deserialise_model(db, version, run_id)
     predictions = predict_model(model, data=df)
     response = {"input": payload, "prediction": int(predictions["Label"][0])}
     response_mapped = response_mapping(response)
@@ -262,13 +255,13 @@ async def gather_futures_from_coroutines(*tasks):
         logger.debug(f"Result of task: {res}")
 
 
-async def main(query_cols, payload):
+async def main(db: Session, query_cols, payload):
     """
     Runs db sql query, model training, and prediction tasks using concurrent execution of coroutines.
 
     :return:
     """
-    df = get_training_data()
+    df = get_training_data(db)
     tasks = [
         get_clients_query(query_cols),
         get_payments_by_client_id(id=query_cols["id"]),
@@ -293,4 +286,4 @@ if __name__ == "__main__":
         "pay": 698,
     }
     query_cols = {"id": 1}
-    asyncio.run(main(query_cols, payload))
+    asyncio.run(main(db, query_cols, payload))

@@ -3,7 +3,7 @@ version: "3.3"
 services:
   webapp:
     build:
-      context: ./src
+      context: .
       target: web
     volumes:
       - ./src/app/:/usr/src/app/
@@ -16,7 +16,7 @@ services:
       - redis
   dev:
     build:
-      context: ./src
+      context: .
       target: dev
     volumes:
       - ./src/:/usr/src/
@@ -37,6 +37,29 @@ services:
       - POSTGRES_USER=hello_fastapi
       - POSTGRES_PASSWORD=hello_fastapi
       - POSTGRES_DB=hello_fastapi_dev
+      - POSTGRES_HOST_AUTH_METHOD=trust
+  unittest:
+    build:
+      context: .
+      target: dev
+    volumes:
+      - ./tests/:/usr/tests/
+      - ./src/:/usr/src/
+    environment:
+      - SQLALCHEMY_DATABASE_URL=postgresql://unittest:unittest@dbtest/unittest
+    depends_on:
+      - dbtest
+  dbtest:
+    image: postgres:14.1
+    expose:
+      - 5433
+    ports:
+      - 5433:5433
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=unittest
+      - POSTGRES_PASSWORD=unittest
+      - POSTGRES_DB=unittest
       - POSTGRES_HOST_AUTH_METHOD=trust
   redis:
     image: "redis:alpine"

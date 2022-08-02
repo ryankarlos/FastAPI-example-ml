@@ -26,7 +26,6 @@ From the project directory, run the following command to build the images for al
 ```
 $ docker compose build
 ```
-![](screenshots/docker-compose-build.png)
 
 Since our application code in dev container interacts with the db, we require the postgres container 
 to be built and run before the dev image can be built. We have defined these services in the `depends on` property.

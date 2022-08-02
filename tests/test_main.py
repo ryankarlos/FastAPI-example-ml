@@ -1,20 +1,13 @@
-from starlette.testclient import TestClient
-
-from src.app import app
-
-client = TestClient(app)
+import json
 
 
-def test_unauthenticated_user_cant_create_todos():
-    todo = dict(text="run a mile", completed=False)
+def test_invalid_id1(client):
+    response = client.get("/query/clients/2")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "id not found"}
 
 
-response = client.post("/api/todos", data=todo)
-assert response.status_code == 401
-
-
-def test_user_can_obtain_auth_token():
-    response = client.post("/api/token", data=good_credentials)
-    assert response.status_code == 200
-    assert "access_token" in response.json()
-    assert "token_type" in response.json()
+def test_invalid_id2(client):
+    response = client.get("/query/payments/4")
+    assert response.status_code == 404
+    assert response.json()["detail"][0]["msg"] == "value is not a valid integer"

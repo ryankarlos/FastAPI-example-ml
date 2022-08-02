@@ -3,4 +3,7 @@ isort>=5.10.1
 flake8>=4.0.1
 pytest>=7.0.1
 codecov>=2.1.12
-starlette>=0.20.4
+starlette==0.19.1
+pytest-postgresql==4.1.1
+pytest-redis==2.4.0
+psycopg2-binary

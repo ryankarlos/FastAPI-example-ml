@@ -3,7 +3,7 @@ import uuid
 
 from pycaret.datasets import get_data
 from sqlalchemy.sql import text
-
+from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from .app.database import async_engine
 from .app.models import Base, Client, Payment
 
