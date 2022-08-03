@@ -94,7 +94,6 @@ This dataset contains information on default payments, demographic factors, cred
 In the dev container, run the following commands:
 
 ```
-root@722927b42f2e:/usr/src# cd ..
 root@722927b42f2e:/usr# python -m src.load_data_into_tables
 ```
 
@@ -131,7 +130,6 @@ We can run the module using the command below. We need to `cd` one dir up so cru
 package when referencing imports.
 
 ```
-root@7c18292737ab:/usr/src# cd ..
 root@7c18292737ab:/usr# python -m app.crud
 ```
 
@@ -148,8 +146,8 @@ The `main.py` module defines the path operation functions and decorators and the
 This will be the main point of interaction to create your API. This app object is the same one referred to 
 in the command to run the live server with uvicorn in the Dockerfile `CMD`.
 The great part of FastAPI is that it takes care of API documentation out-of-the-box. 
-To view the API documentation we can go http://127.0.0.1:8000/docs as we have added port forwarding to 
-forward traffic from port 8000 to port 80 where server is listening on.The automatic documentation uses SwaggerUI.
+To view the API documentation we can go [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) 
+as we have added port forwarding to forward traffic from port 8000 to port 80 where server is listening on.The automatic documentation uses SwaggerUI.
 See below:
 
 ![](screenshots/fastapi-docs-page.png)

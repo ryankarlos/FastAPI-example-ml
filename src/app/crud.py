@@ -19,10 +19,9 @@ from pycaret.classification import (
     models,
 )
 from sqlalchemy import func
-
 from src.app.models import Client, ModelResult, Payment
 
-from .database import engine
+from .database import engine, SessionLocal
 
 logger = logging.getLogger("api_methods")
 logger.setLevel(logging.DEBUG)
@@ -144,7 +143,7 @@ async def serialise_model(
 
 
 async def deserialise_model(db: Session, version, run_id):
-    result = await get_model_artifact_from_db(version, run_id)
+    result = await get_model_artifact_from_db(db, version, run_id)
     pickle_string = result["Model"]
     model = pickle.loads(pickle_string)
     return model
@@ -168,7 +167,7 @@ async def initialise_training_setup(data, target):
     )
 
 
-async def training_workflow(data, cv_folds=5, version=0.1):
+async def training_workflow(db, data, cv_folds=5, version=0.1):
     data_copy = data.copy()
     run_id = await create_runid()
     await initialise_training_setup(data=data_copy, target="default")
@@ -183,7 +182,7 @@ async def training_workflow(data, cv_folds=5, version=0.1):
     logger.debug(f"CV Results Grid for all models: \n\n {best_results}")
     model_name, performance = await get_model_performance_scores(best_results)
     logger.info(f"Performance for model {model_name}: {json.dumps(performance)}")
-    await finalize_and_serialise_model(best, run_id, model_name, performance, version)
+    await finalize_and_serialise_model(db, best, run_id, model_name, performance, version)
     return model_name, performance
 
 
@@ -263,10 +262,10 @@ async def main(db: Session, query_cols, payload):
     """
     df = get_training_data(db)
     tasks = [
-        get_clients_query(query_cols),
-        get_payments_by_client_id(id=query_cols["id"]),
-        training_workflow(df),
-        predict(payload),
+        get_clients_query(db, query_cols),
+        get_payments_by_client_id(db, query_cols["id"]),
+        training_workflow(db, df),
+        predict(db, payload),
     ]
     await schedule_coroutine_tasks(*tasks)
 
@@ -286,4 +285,6 @@ if __name__ == "__main__":
         "pay": 698,
     }
     query_cols = {"id": 1}
+    db = SessionLocal()
     asyncio.run(main(db, query_cols, payload))
+    db.close()

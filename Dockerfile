@@ -26,5 +26,4 @@ RUN pip install --upgrade pip setuptools wheel \
     && pip install --no-cache-dir --upgrade -r /usr/src/requirements.txt \
     && rm -rf /root/.cache/pip
 COPY src/app /usr/src/app
-EXPOSE 80
 CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]

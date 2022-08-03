@@ -7,6 +7,8 @@ services:
       target: web
     volumes:
       - ./src/app/:/usr/src/app/
+    expose:
+      - 80
     ports:
       - 8000:80
     environment:
@@ -45,6 +47,7 @@ services:
     volumes:
       - ./tests/:/usr/tests/
       - ./src/:/usr/src/
+    command: -c "pytest tests"
     environment:
       - SQLALCHEMY_DATABASE_URL=postgresql://unittest:unittest@dbtest/unittest
     depends_on:
