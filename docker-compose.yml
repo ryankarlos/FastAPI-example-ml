@@ -22,6 +22,7 @@ services:
       target: dev
     volumes:
       - ./src/:/usr/src/
+      - ./tests/:/usr/tests/
     environment:
       - SQLALCHEMY_DATABASE_URL=postgresql://hello_fastapi:hello_fastapi@db/hello_fastapi_dev
     depends_on:

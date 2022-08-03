@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException
 import time
 from sqlalchemy.orm import Session
 from src.app import crud, models
-from .schemas import PredIn, PredOut
+from .schemas import PredIn, PredOut, GetClientAge, PaymentOut, ClientOut
 from .database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -34,7 +34,7 @@ async def index():
     }
 
 
-@app.get("/query/clients/{id}")
+@app.get("/query/clients/{id}", response_model=ClientOut)
 async def read_client_by_id(id: int, db: Session = Depends(get_db)):
     query_cols = {"id": id}
     response = await crud.get_clients_query(db, query_cols)
@@ -43,17 +43,15 @@ async def read_client_by_id(id: int, db: Session = Depends(get_db)):
 
 @app.get("/query/clients/age/")
 async def read_client_avg_age(
-    gender: Union[str, None],
-    education: Union[str, None],
-    marriage: Union[str, None],
+    params: GetClientAge,
     db: Session = Depends(get_db),
 ):
-    query_cols = {"gender": gender, "education": education, "marriage": marriage}
-    response = await crud.get_clients_query(db, query_cols)
+    query_cols = params.dict()
+    response = await crud.get_clienxts_query(db, query_cols)
     return response
 
 
-@app.get("/query/payments/{id}")
+@app.get("/query/payments/{id}", response_model=List[PaymentOut])
 async def read_payments_by_client_id(id: int, db: Session = Depends(get_db)):
     response = await crud.get_payments_by_client_id(db, id=id)
     return response

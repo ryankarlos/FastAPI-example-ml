@@ -66,7 +66,6 @@ async def get_clients_query(db: Session, query_cols):
         )
         row = db.query(Client).filter(Client.id == query_cols.get("id")).one()
         response = {
-            "id": row.id,
             "gender": row.gender,
             "education": row.education,
             "marriage": row.marriage,
@@ -182,7 +181,9 @@ async def training_workflow(db, data, cv_folds=5, version=0.1):
     logger.debug(f"CV Results Grid for all models: \n\n {best_results}")
     model_name, performance = await get_model_performance_scores(best_results)
     logger.info(f"Performance for model {model_name}: {json.dumps(performance)}")
-    await finalize_and_serialise_model(db, best, run_id, model_name, performance, version)
+    await finalize_and_serialise_model(
+        db, best, run_id, model_name, performance, version
+    )
     return model_name, performance
 
 
