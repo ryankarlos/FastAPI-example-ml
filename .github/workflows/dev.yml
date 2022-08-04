@@ -2,19 +2,31 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - [master,main]
+  pull_request:
+    branches:
+      - [master,main]
+env:
+  ## Sets linting variables
+  PYTHON_BLACK_CONFIG_FILE: pyproject.toml
+  PYTHON_FLAKE8_CONFIG_FILE: .flake8
+  PYTHON_ISORT_CONFIG_FILE: pyproject.toml
+  VALIDATE_PYTHON_ISORT: true
+  VALIDATE_PYTHON_FLAKE8: true
+  VALIDATE_PYTHON_BLACK: true
+  FILTER_REGEX_EXCLUDE: .*tests/.*
 jobs:
   code_quality:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source repository
         uses: actions/checkout@v2
-      - name: Check imports
-        run: isort .
-      - name: Run black
-        run: black --check .
-      - name: Run flake8
-        run: flake8
+      - name: Super Linter for isort,black and flake8
+        uses: github/super-linter@v4.9.5
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: master
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +34,7 @@ jobs:
       - name: Start container and run tests
         run: make test
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v3.1.0
         with:
             directory: ./coverage/reports/
             fail_ci_if_error: true
