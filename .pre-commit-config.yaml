@@ -1,5 +1,28 @@
 repos:
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: 1ba6bfc
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
   - repo: https://github.com/psf/black
-    rev: stable
+    rev: 21.6b0
     hooks:
       - id: black
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        language_version: python3
+  - repo: https://github.com/pre-commit/mirrors-mypy
+      rev: 9feadeb
+      hooks:
+        - id: mypy
+          exclude: ^tests/
+          args:
+            [
+                --disallow-untyped-defs,
+                --check-untyped-defs,
+                --warn-redundant-casts,
+                --no-implicit-optional,
+                --strict-optional
+            ]

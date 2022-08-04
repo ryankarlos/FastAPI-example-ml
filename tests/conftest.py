@@ -21,7 +21,7 @@ from sqlmodel import Session, SQLModel, create_engine
 SQLALCHEMY_DATABASE_URL = os.environ["SQLALCHEMY_DATABASE_URL"]
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def load():
     return asyncio.run(async_main())
 

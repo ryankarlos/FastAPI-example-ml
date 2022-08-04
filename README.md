@@ -1,10 +1,14 @@
 # Examples of deploying and hosting a Machine Learning Model with FastAPI
 
+![Actions Status](https://github.com/ryankarlos/FastAPI-example-ml/actions/workflows/CI/badge.svg)?branch=master]
+
+
 This repository contains code for asynchronous example api using the [Fast Api framework](https://fastapi.tiangolo.com/), 
 [Uvicorn server](https://www.uvicorn.org/), [SQlAlchemy](https://www.sqlalchemy.org/), Postgres Database for crud operations in db tables.
 It also uses the [PyCaret library](https://pycaret.org/) to train machine learning models and generated predictions for data 
 received from requests to API.
 
+___
 ## Creating dev environment
 
 We have defined the services that make up your app in `docker-compose.yml` so they can be run together in an 
@@ -105,6 +109,7 @@ and create the postgres tables using the SQLAlchemy ORM classes in `models.py` m
 
 ![](screenshots/load-data-into-table-logs2.png)
 
+---
 ## Run all methods asynchronously
 
 The `src/app/crud.py` module defines all the functions which will be called by the path operation 
@@ -139,7 +144,7 @@ complete faster than the model training and prediction workflows.
 
 ![](screenshots/run_crud_module_logs.png)
 
-
+---
 ## Interactive API documentation
 
 The `main.py` module defines the path operation functions and decorators and the app object which is an instance of the class FastAPI. 
@@ -224,6 +229,7 @@ recognise each of them and take data from the correct place. As described in [6]
 * If the parameter is of a singular type (like int, float, str, bool, etc) it will be interpreted as a query parameter.
 * If the parameter is declared to be of the type of a Pydantic model, it will be interpreted as a request body.
 
+---
 ### Clean up
 
 To teardown all the containers, run the following command 
@@ -247,6 +253,7 @@ or deleting multiple images at once which share a common name pattern
 docker rmi $(docker images | grep 'fastapi') 
 ```
 
+---
 ## References
 
 

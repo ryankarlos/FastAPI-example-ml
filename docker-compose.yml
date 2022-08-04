@@ -48,7 +48,7 @@ services:
     volumes:
       - ./tests/:/usr/tests/
       - ./src/:/usr/src/
-    command: -c "pytest tests"
+    command: -c "pytest --cov=./ --cov-report=xml tests/"
     environment:
       - SQLALCHEMY_DATABASE_URL=postgresql://unittest:unittest@dbtest/unittest
     depends_on:

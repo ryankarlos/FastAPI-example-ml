@@ -4,9 +4,9 @@ from typing import Optional
 
 
 class GetClientAge(BaseModel):
-    gender: Optional[str] = None
-    education: Optional[str] = None
-    marriage: Optional[str] = None
+    gender: Optional[int] = None
+    education: Optional[int] = None
+    marriage: Optional[int] = None
 
 
 class ClientOut(BaseModel):
