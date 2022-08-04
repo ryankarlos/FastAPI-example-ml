@@ -2,9 +2,10 @@ name: CI
 on:
   push:
     branches:
-      - [master,main]
+      - [master, main]
   pull_request:
-      types: [ opened, synchronize ]
+      types: [ opened, synchronize, closed]
+  workflow_dispatch:
 env:
   ## Sets linting variables
   PYTHON_BLACK_CONFIG_FILE: pyproject.toml
