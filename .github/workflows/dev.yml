@@ -1,10 +1,13 @@
 name: CI
 on:
   push:
-    branches:
-      - [master,main]
+    branches: [master, main]
   pull_request:
-      types: [ opened, synchronize ]
+    types: [opened, synchronize, closed]
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 env:
   ## Sets linting variables
   PYTHON_BLACK_CONFIG_FILE: pyproject.toml
@@ -14,6 +17,7 @@ env:
   VALIDATE_PYTHON_FLAKE8: true
   VALIDATE_PYTHON_BLACK: true
   FILTER_REGEX_EXCLUDE: .*tests/.*
+  LINTER_RULES_PATH: /
 jobs:
   code_quality:
     runs-on: ubuntu-latest
