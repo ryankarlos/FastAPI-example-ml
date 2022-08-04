@@ -12,7 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from .database import Base, engine
+from .database import Base
 
 
 class Client(Base):

@@ -1,12 +1,33 @@
 import json
-from typing import List, Union
-import redis
-from fastapi import Depends, FastAPI, HTTPException
 import time
+from typing import (
+    List,
+    Union,
+)
+
+from fastapi import (
+    Depends,
+    FastAPI,
+    HTTPException,
+)
+import redis
 from sqlalchemy.orm import Session
-from src.app import crud, models
-from .schemas import PredIn, PredOut, GetClientAge, PaymentOut, ClientOut
-from .database import engine, get_db
+
+from src.app import (
+    crud,
+    models,
+)
+
+from .database import (
+    engine,
+    get_db,
+)
+from .schemas import (
+    ClientOut,
+    GetClientAge,
+    PaymentOut,
+    PredIn,
+)
 
 models.Base.metadata.create_all(bind=engine)
 

@@ -6,22 +6,30 @@ import os
 import pickle
 import sys
 import uuid
-from sqlalchemy.orm import Session
 
 import pandas as pd
 from pycaret.classification import (
     compare_models,
     finalize_model,
+    models,
     predict_model,
     pull,
     save_model,
     setup,
-    models,
 )
 from sqlalchemy import func
-from src.app.models import Client, ModelResult, Payment
+from sqlalchemy.orm import Session
 
-from .database import engine, SessionLocal
+from src.app.models import (
+    Client,
+    ModelResult,
+    Payment,
+)
+
+from .database import (
+    SessionLocal,
+    engine,
+)
 
 logger = logging.getLogger("api_methods")
 logger.setLevel(logging.DEBUG)

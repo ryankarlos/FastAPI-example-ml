@@ -1,21 +1,24 @@
-from typing import Any
-from typing import Generator
-
-import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine
-from src.app.database import Base, get_db
+import os
+import sys
+from typing import (
+    Any,
+    Generator,
+)
+
+from fastapi.testclient import TestClient
+import pytest
+from sqlmodel import (
+    Session,
+    SQLModel,
+    create_engine,
+)
+
+from src.app.database import get_db
 from src.app.main import app
 from src.load_data_into_tables import async_main
-from sqlmodel import Session, SQLModel, create_engine
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 SQLALCHEMY_DATABASE_URL = os.environ["SQLALCHEMY_DATABASE_URL"]

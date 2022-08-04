@@ -10,14 +10,11 @@ jobs:
       - name: Check out source repository
         uses: actions/checkout@v2
       - name: Check imports
-          run: isort .
+        run: isort .
       - name: Run black
-          run:
-            black --check .
+        run: black --check .
       - name: Run flake8
-          run: flake8
-      - name: Run Mypy
-          run: mypy
+        run: flake8
   test:
     runs-on: ubuntu-latest
     steps:
@@ -25,8 +22,8 @@ jobs:
       - name: Start container and run tests
         run: make test
       - name: Upload coverage to Codecov
-          uses: codecov/codecov-action@v3
-          with:
+        uses: codecov/codecov-action@v3
+        with:
             directory: ./coverage/reports/
             fail_ci_if_error: true
             flags: unittests

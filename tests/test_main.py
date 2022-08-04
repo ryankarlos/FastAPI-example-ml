@@ -1,9 +1,14 @@
-import json
-from src.app.models import Payment, Client, ModelResult
-from sqlmodel import select
-import pytest
 from decimal import Decimal
+
+import pytest
+from sqlmodel import select
+
 from src.app.crud import get_clients_query
+from src.app.models import (
+    Client,
+    ModelResult,
+    Payment,
+)
 
 
 def test_load_data(load, session):
@@ -58,27 +63,27 @@ def test_read_client_avg_age(load, client):
 def test_incorrect_request_path(load, client):
     response = client.get("/query/bill/payments/")
     assert response.status_code == 404
-    assert response.json() == {'detail': 'Not Found'}
+    assert response.json() == {"detail": "Not Found"}
     response = client.get("/query/clients/loyal")
     assert response.status_code == 422
     data = response.json()
-    assert data['detail'][0]['msg'] == "value is not a valid integer"
+    assert data["detail"][0]["msg"] == "value is not a valid integer"
     response = client.get("/query/1/clients/2")
     assert response.status_code == 404
-    assert response.json() == {'detail': 'Not Found'}
+    assert response.json() == {"detail": "Not Found"}
 
 
 def test_query_params_validation_error(load, client):
     response = client.get("/query/clients/age/?gender=male")
     assert response.status_code == 422
-    assert response.json()['detail'][0]['msg'] == "value is not a valid integer"
+    assert response.json()["detail"][0]["msg"] == "value is not a valid integer"
 
 
 @pytest.mark.asyncio
 async def test_avg_age_func(load, session):
-    querycols1 = {'education':3, 'marriage':1}
-    querycols2 = {'gender': 2,'education':1, 'marriage':2 }
+    querycols1 = {"education": 3, "marriage": 1}
+    querycols2 = {"gender": 2, "education": 1, "marriage": 2}
     results1 = await get_clients_query(session, querycols1)
     results2 = await get_clients_query(session, querycols2)
-    assert results1  == {'average-age' :Decimal('43.1')}
-    assert results2 == {'average-age': Decimal('30.1')}
+    assert results1 == {"average-age": Decimal("43.1")}
+    assert results2 == {"average-age": Decimal("30.1")}

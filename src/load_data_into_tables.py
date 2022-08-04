@@ -3,9 +3,13 @@ import uuid
 
 from pycaret.datasets import get_data
 from sqlalchemy.sql import text
-from sqlalchemy.ext.asyncio.engine import AsyncEngine
+
 from .app.database import async_engine
-from .app.models import Base, Client, Payment
+from .app.models import (
+    Base,
+    Client,
+    Payment,
+)
 
 
 def split_data_client_payments():
@@ -25,11 +29,11 @@ async def async_main():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(text(f"TRUNCATE TABLE clients CASCADE"))
+        await conn.execute(text("TRUNCATE TABLE clients CASCADE"))
         await conn.run_sync(_write_sql, clients_df, "clients")
         await conn.run_sync(_write_sql, payments_df, "payments")
     async with async_engine.connect() as conn:
-        results = await conn.execute(text(f"SELECT COUNT(*) FROM payments"))
+        results = await conn.execute(text("SELECT COUNT(*) FROM payments"))
         print(f"Number of rows: {results.fetchall()[0][0]}")
     await async_engine.dispose()
 
