@@ -1,15 +1,17 @@
+![python-version](https://img.shields.io/badge/Python-3.8-green) 
+[![tests](https://github.com/ryankarlos/FastAPI-example-ml/actions/workflows/dev.yml/badge.svg?branch=master)](https://github.com/ryankarlos/FastAPI-example-ml/actions) 
+[![codecov](https://codecov.io/gh/ryankarlos/FastAPI-example-ml/branch/master/graph/badge.svg?token=QnKHUobMQS)](https://codecov.io/gh/ryankarlos/FastAPI-example-ml)
+
 # Examples of deploying and hosting a Machine Learning Model with FastAPI
-
-![Actions Status](https://github.com/ryankarlos/FastAPI-example-ml/actions/workflows/CI/badge.svg)?branch=master]
-
+___
 
 This repository contains code for asynchronous example api using the [Fast Api framework](https://fastapi.tiangolo.com/), 
 [Uvicorn server](https://www.uvicorn.org/), [SQlAlchemy](https://www.sqlalchemy.org/), Postgres Database for crud operations in db tables.
 It also uses the [PyCaret library](https://pycaret.org/) to train machine learning models and generated predictions for data 
 received from requests to API.
 
-___
 ## Creating dev environment
+___
 
 We have defined the services that make up your app in `docker-compose.yml` so they can be run together in an 
 isolated environment. We have defined four services:
@@ -77,6 +79,7 @@ rm -rf /Library/LaunchDaemons/com.edb.launchd.postgresql-13.plist
 ```
 
 ## Update Tables in DB
+___
 
 First we need to udpate the client and payments table in the postgres database. we will be using data packaged in
 the pycaret library, which is based on a dataset from UCI called Default of Credit Card Clients Dataset 
@@ -109,8 +112,9 @@ and create the postgres tables using the SQLAlchemy ORM classes in `models.py` m
 
 ![](screenshots/load-data-into-table-logs2.png)
 
----
+
 ## Run all methods asynchronously
+___
 
 The `src/app/crud.py` module defines all the functions which will be called by the path operation 
 functions defined in the `main.py` module. We have declared our path operation functions with `async def` in 
@@ -144,8 +148,9 @@ complete faster than the model training and prediction workflows.
 
 ![](screenshots/run_crud_module_logs.png)
 
----
+
 ## Interactive API documentation
+___
 
 The `main.py` module defines the path operation functions and decorators and the app object which is an instance of the class FastAPI. 
 This will be the main point of interaction to create your API. This app object is the same one referred to 
@@ -229,8 +234,9 @@ recognise each of them and take data from the correct place. As described in [6]
 * If the parameter is of a singular type (like int, float, str, bool, etc) it will be interpreted as a query parameter.
 * If the parameter is declared to be of the type of a Pydantic model, it will be interpreted as a request body.
 
----
-### Clean up
+
+## Clean up
+___
 
 To teardown all the containers, run the following command 
 
@@ -253,9 +259,9 @@ or deleting multiple images at once which share a common name pattern
 docker rmi $(docker images | grep 'fastapi') 
 ```
 
----
-## References
 
+## References
+___
 
 * 1 Pycaret Documentation https://pycaret.gitbook.io/docs/ 
 * 2 Async with Fast API https://fastapi.tiangolo.com/async/
