@@ -87,3 +87,25 @@ async def test_avg_age_func(load, session):
     results2 = await get_clients_query(session, querycols2)
     assert results1 == {"average-age": Decimal("43.1")}
     assert results2 == {"average-age": Decimal("30.1")}
+
+
+# def test_train_predict_request(load, client, session, payload):
+#     response = client.get("/train/model/")
+#     data = response.json()['Response']
+#     assert data['Best-Model'] == "Linear Discriminant Analysis"
+#     assert data['Scores'] == approx(0.75, rel=1e-2)
+#     assert response.status_code == 200
+#     response = client.post("/predict/realtime/", json=payload)
+#     data = response.json()
+#     assert data == {"input": payload, "prediction": "Default"}
+#     assert response.status_code == 200
+#     truncate_query = sqlalchemy.text("TRUNCATE TABLE models")
+#     session.execute(truncate_query)
+#     session.commit()
+
+
+def test_get_training_data(load, client, session, payload):
+    response = client.get("/train/data/")
+    data = response.json()["Response"]
+    assert response.status_code == 200
+    assert len(data) == 24000

@@ -33,7 +33,9 @@ from .database import (
 
 logger = logging.getLogger("api_methods")
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s-%(levelname)s-[%(filename)s:%(lineno)d]-%(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s-%(levelname)s-[%(filename)s:%(lineno)d]-%(message)s"
+)
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
@@ -54,7 +56,9 @@ def get_training_data(db: Session):
 
 async def query_table(db: Session, schema, skip, limit):
     results = db.query(schema).offset(skip).limit(limit).all()
-    db.expunge_all()  # do this so results attributes accessible outside the scope of the session
+    # do this so results attributes accessible outside
+    # the scope of the session
+    db.expunge_all()
     return results
 
 
@@ -108,7 +112,9 @@ async def get_model_artifact_from_db(db: Session, version, run_id):
     if run_id is not None:
         row = db.query(ModelResult).filter(ModelResult.run_id == run_id).one()
     else:
-        logger.info(f"Fetching latest model artifact from db for model version {version}")
+        logger.info(
+            f"Fetching latest model artifact from db for model version {version}"
+        )
         row = db.query(ModelResult).order_by(ModelResult.created_date.desc()).first()
     response = {"Model": row.artifact}
     return response
@@ -175,13 +181,18 @@ async def training_workflow(db, data, cv_folds=5, version=0.1):
     logger.info("initialised training setup")
     all_models = models()
     models_list = ",".join(all_models.reset_index()["ID"].tolist())
-    logger.info(f"Running cv with {cv_folds} folds for models: {models_list}.Wait for completion .....")
+    logger.info(
+        f"Running cv with {cv_folds} folds for models: "
+        f"{models_list}.Wait for completion ....."
+    )
     best = compare_models(fold=cv_folds, verbose=False)
     best_results = pull()  # fetch the model comparison results df
     logger.debug(f"CV Results Grid for all models: \n\n {best_results}")
     model_name, performance = await get_model_performance_scores(best_results)
     logger.info(f"Performance for model {model_name}: {json.dumps(performance)}")
-    await finalize_and_serialise_model(db, best, run_id, model_name, performance, version)
+    await finalize_and_serialise_model(
+        db, best, run_id, model_name, performance, version
+    )
     return model_name, performance
 
 
@@ -203,7 +214,9 @@ async def finalize_and_serialise_model(
     final_best = finalize_model(model, model_only=False)
     params = await get_best_model_params(final_best)
     logger.info(f"Tuned parameters for model {model_name}: \n\n {params}")
-    await serialise_model(db, final_best, version, run_id, model_name, performance, params)
+    await serialise_model(
+        db, final_best, version, run_id, model_name, performance, params
+    )
     logger.info(f"serialised model {model_name} to db with run id {run_id}")
     return final_best
 
@@ -241,8 +254,8 @@ async def schedule_coroutine_tasks(*tasks):
 
 async def gather_futures_from_coroutines(*tasks):
     """
-    Passes in list of coroutines to await.gather and waits on a bunch of futures to return the
-    results in the given order.
+    Passes in list of coroutines to await.gather and
+    waits on a bunch of futures to return the results in the given order.
     :param tasks: List of coroutines
     :return:
     """
@@ -253,7 +266,8 @@ async def gather_futures_from_coroutines(*tasks):
 
 async def main(db: Session, query_cols, payload):
     """
-    Runs db sql query, model training, and prediction tasks using concurrent execution of coroutines.
+    Runs db sql query, model training, and prediction tasks using
+    concurrent execution of coroutines.
 
     :return:
     """

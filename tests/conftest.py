@@ -29,7 +29,7 @@ def load():
     return asyncio.run(async_main())
 
 
-@pytest.fixture()
+@pytest.fixture(scope="function")
 def session():
     engine = create_engine(SQLALCHEMY_DATABASE_URL)
     SQLModel.metadata.create_all(engine)
@@ -51,3 +51,17 @@ def client(session: Session) -> Generator[TestClient, Any, None]:
     client = TestClient(app)
     yield client  #
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+def payload(session: Session):
+    return {
+        "gender": 2,
+        "education": 2,
+        "marriage": 1,
+        "age": 24,
+        "limitbal": 20000,
+        "repay_status": 2,
+        "bill": 3913,
+        "pay": 698,
+    }

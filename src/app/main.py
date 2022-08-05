@@ -27,6 +27,7 @@ from .schemas import (
     GetClientAge,
     PaymentOut,
     PredIn,
+    TrainingDataResponse,
 )
 
 models.Base.metadata.create_all(bind=engine)
@@ -50,7 +51,10 @@ def get_hit_count():
 @app.get("/")
 async def index():
     count = get_hit_count()
-    return {"message": f"Welcome to the home page of the API. I have been visited {count} times"}
+    return {
+        "message": f"Welcome to the home page of the API. "
+        f"I have been visited {count} times"
+    }
 
 
 @app.get("/query/clients/{id}", response_model=ClientOut)
@@ -61,7 +65,8 @@ async def read_client_by_id(id: int, db: Session = Depends(get_db)):
 
 
 # need to add params: Model = Depends() so it is recognized as query params
-# otherwise expects body in request and throws error in response expecting required field in body
+# otherwise expects body in request and throws error in response
+# expecting required field in body
 # https://stackoverflow.com/questions/62468402/query-parameters-from-pydantic-model
 @app.get("/query/clients/age/")
 async def read_client_avg_age(
@@ -79,7 +84,7 @@ async def read_payments_by_client_id(id: int, db: Session = Depends(get_db)):
     return response
 
 
-@app.get("/train/data/")
+@app.get("/train/data/", response_model=TrainingDataResponse)
 async def get_training_data(db: Session = Depends(get_db)):
     df = crud.get_training_data(db)
     data_dict = df.to_dict("records")
@@ -88,10 +93,16 @@ async def get_training_data(db: Session = Depends(get_db)):
 
 
 @app.get("/train/model/")
-async def train_model(folds: int = 5, version: float = 0.1, db: Session = Depends(get_db)):
+async def train_model(
+    folds: int = 5, version: float = 0.1, db: Session = Depends(get_db)
+):
     data = crud.get_training_data(db)
-    name, performance = await crud.training_workflow(data, cv_folds=folds, version=version)
-    response_object = {"Response": {"Best-Model": name, "Scores": json.dumps(performance)}}
+    name, performance = await crud.training_workflow(
+        data, cv_folds=folds, version=version
+    )
+    response_object = {
+        "Response": {"Best-Model": name, "Scores": json.dumps(performance)}
+    }
     return response_object
 
 
