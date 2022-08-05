@@ -1,5 +1,6 @@
-
-![Tests](https://github.com/ryankarlos/FastAPI-example-ml/actions/workflows/dev.yml/badge.svg?branch=master)
+![python-version](https://img.shields.io/badge/Python-3.8-green) 
+[![tests](https://github.com/ryankarlos/FastAPI-example-ml/actions/workflows/dev.yml/badge.svg?branch=master)](https://github.com/ryankarlos/FastAPI-example-ml/actions) 
+[![codecov](https://codecov.io/gh/ryankarlos/FastAPI-example-ml/branch/master/graph/badge.svg?token=QnKHUobMQS)](https://codecov.io/gh/ryankarlos/FastAPI-example-ml)
 
 # Examples of deploying and hosting a Machine Learning Model with FastAPI
 ___
