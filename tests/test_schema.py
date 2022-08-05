@@ -10,7 +10,8 @@ def test_clientage_raises_error_all_params_none():
     assert exc_info.value.errors() == [
         {
             "loc": ("__root__",),
-            "msg": "At least one of gender, education, marriage query " "strings must be passed with a value",
+            "msg": "At least one of gender, education, marriage query "
+            "strings must be passed with a value",
             "type": "value_error",
         }
     ]
