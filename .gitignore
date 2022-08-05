@@ -2,7 +2,7 @@ __pycache__/
 /src/app/__pycache__/
 /src/model.pkl
 tests/__pycache__/
-
+coverage
 .pytest_cache
 
 .DS_Store

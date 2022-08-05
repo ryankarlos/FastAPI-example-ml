@@ -27,6 +27,7 @@ from .schemas import (
     GetClientAge,
     PaymentOut,
     PredIn,
+    TrainingDataResponse,
 )
 
 models.Base.metadata.create_all(bind=engine)
@@ -79,7 +80,7 @@ async def read_payments_by_client_id(id: int, db: Session = Depends(get_db)):
     return response
 
 
-@app.get("/train/data/")
+@app.get("/train/data/", response_model=TrainingDataResponse)
 async def get_training_data(db: Session = Depends(get_db)):
     df = crud.get_training_data(db)
     data_dict = df.to_dict("records")
